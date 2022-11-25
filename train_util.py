@@ -16,7 +16,7 @@ from diffuseq.utils.fp16_util import (
     master_params_to_model_params,
     model_grads_to_master_grads,
     unflatten_master_params,
-    zero_grad,
+    zero_grad, 
 )
 from diffuseq.utils.nn import update_ema
 from diffuseq.step_sample import LossAwareSampler, UniformSampler
