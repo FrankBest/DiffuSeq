@@ -70,12 +70,14 @@ class TransformerNetModel(nn.Module):
             self.lm_head = nn.Linear(self.input_dims, vocab_size)
             with th.no_grad():
                 self.lm_head.weight = self.word_embedding.weight
-            # self.lm_head.weight.requires_grad = False
-            # self.word_embedding.weight.requires_grad = False
+            self.lm_head.weight.requires_grad = False
+            self.word_embedding.weight.requires_grad = False
             
             self.input_transformers = temp_bert.encoder
-            for param in self.input_transformers.parameters():
-                param.requires_grad = False
+            # freeze the bert except the last layer
+            for param in self.input_transformers.layer[:-3].parameters():
+                param.requires_grad = False  
+
             self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
             self.position_embeddings = temp_bert.embeddings.position_embeddings
             self.LayerNorm = temp_bert.embeddings.LayerNorm
