@@ -44,7 +44,6 @@ class TransformerNetModel(nn.Module):
         if config is None:
             config = AutoConfig.from_pretrained(config_name)
             config.hidden_dropout_prob = dropout
-
         self.input_dims = input_dims
         self.hidden_t_dim = hidden_t_dim
         self.output_dims = output_dims
@@ -52,21 +51,12 @@ class TransformerNetModel(nn.Module):
         self.logits_mode = logits_mode
         self.hidden_size = config.hidden_size
 
-        self.word_embedding = nn.Embedding(vocab_size, self.input_dims)
-        self.lm_head = nn.Linear(self.input_dims, vocab_size)
-        with th.no_grad():
-            self.lm_head.weight = self.word_embedding.weight
-
         time_embed_dim = hidden_t_dim * 4
         self.time_embed = nn.Sequential(
             linear(hidden_t_dim, time_embed_dim),
             SiLU(),
             linear(time_embed_dim, config.hidden_size),
         )
-
-        if self.input_dims != config.hidden_size:
-            self.input_up_proj = nn.Sequential(nn.Linear(input_dims, config.hidden_size),
-                                              nn.Tanh(), nn.Linear(config.hidden_size, config.hidden_size))
         
         if init_pretrained == 'bert':
             print('initializing from pretrained bert...')
@@ -74,12 +64,18 @@ class TransformerNetModel(nn.Module):
             temp_bert = BertModel.from_pretrained(config_name, config=config)
 
             self.word_embedding = temp_bert.embeddings.word_embeddings
+            self.input_dims = self.word_embedding.weight.shape[-1]
+            self.output_dims = self.word_embedding.weight.shape[-1]
+
+            self.lm_head = nn.Linear(self.input_dims, vocab_size)
             with th.no_grad():
                 self.lm_head.weight = self.word_embedding.weight
             # self.lm_head.weight.requires_grad = False
             # self.word_embedding.weight.requires_grad = False
             
             self.input_transformers = temp_bert.encoder
+            for param in self.input_transformers.parameters():
+                param.requires_grad = False
             self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
             self.position_embeddings = temp_bert.embeddings.position_embeddings
             self.LayerNorm = temp_bert.embeddings.LayerNorm
@@ -88,6 +84,11 @@ class TransformerNetModel(nn.Module):
             del temp_bert.pooler
 
         elif init_pretrained == 'no':
+            self.word_embedding = nn.Embedding(vocab_size, self.input_dims)
+            self.lm_head = nn.Linear(self.input_dims, vocab_size)
+            with th.no_grad():
+                self.lm_head.weight = self.word_embedding.weight
+
             self.input_transformers = BertEncoder(config)
 
             self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
@@ -96,6 +97,10 @@ class TransformerNetModel(nn.Module):
         
         else:
             assert False, "invalid type of init_pretrained"
+        
+        if self.input_dims != config.hidden_size:
+            self.input_up_proj = nn.Sequential(nn.Linear(input_dims, config.hidden_size),
+                                              nn.Tanh(), nn.Linear(config.hidden_size, config.hidden_size))
         
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
@@ -133,7 +138,7 @@ class TransformerNetModel(nn.Module):
         :return: an [N x C x ...] Tensor of outputs.
         """
         emb_t = self.time_embed(timestep_embedding(timesteps, self.hidden_t_dim))
-
+        
         if self.input_dims != self.hidden_size:
             emb_x = self.input_up_proj(x)
         else:

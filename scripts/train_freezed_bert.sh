@@ -12,5 +12,5 @@ python -m torch.distributed.launch --nproc_per_node=4 --master_port=12233 --use_
 --vocab bert \
 --seq_len 128 \
 --schedule_sampler lossaware \
---init_pretrained bert \
---notes test-qqp 
+--notes frozen-bert-qqp \
+--use_plm_init bert 
