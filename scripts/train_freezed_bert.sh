@@ -5,12 +5,12 @@ python -m torch.distributed.launch --nproc_per_node=4 --master_port=12233 --use_
 --save_interval 5000 \
 --seed 102 \
 --noise_schedule sqrt \
---hidden_t_dim 64 \
---hidden_dim 64 \
+--hidden_dim 128 \
 --bsz 1024 \
 --dataset qqp \
 --data_dir datasets/QQP \
 --vocab bert \
 --seq_len 128 \
 --schedule_sampler lossaware \
+--init_pretrained bert \
 --notes test-qqp 
