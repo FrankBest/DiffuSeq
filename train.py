@@ -72,8 +72,10 @@ def main():
     # model.cuda() #  DEBUG **
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
+    pytorch_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     logger.log(f'### The parameter count is {pytorch_total_params}')
+    logger.log(f'### The trainable count is {pytorch_trainable_params}')
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion)
 
     logger.log(f'### Saving the hyperparameters to {args.checkpoint_path}/training_args.json')
