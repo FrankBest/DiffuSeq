@@ -6,7 +6,7 @@ import time
 from diffuseq import gaussian_diffusion as gd
 from diffuseq.gaussian_diffusion import SpacedDiffusion, space_timesteps
 from diffuseq.transformer_model import TransformerNetModel
-from diffuseq.my_models import LSTMNetModel
+from diffuseq.my_models import LSTMNetModel, GRUNetModel
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
 class myTokenizer():
@@ -143,6 +143,17 @@ def create_model_and_diffusion(
             dropout=dropout,
             vocab_size=vocab_size,
         )
+    elif model_name == 'gru':
+        model = GRUNetModel(
+            input_dims=hidden_dim,
+            hidden_dims=hidden_dim,
+            output_dims=(hidden_dim if not learn_sigma else hidden_dim*2),
+            hidden_t_dim=hidden_t_dim,
+            dropout=dropout,
+            vocab_size=vocab_size,
+        )
+    else:
+        raise NotImplementedError
 
     betas = gd.get_named_beta_schedule(noise_schedule, diffusion_steps)
 
