@@ -29,8 +29,10 @@ if __name__ == '__main__':
     parser.add_argument('--vocab', type=str, default='bert', help='use bert vocab or load external vocab dict if given as path')
     parser.add_argument('--use_plm_init', type=str, default='no', choices=['no', 'bert'], help='load init parameter from the pre-trained lm')
 
+    parser.add_argument('--model_name', type=str, default='transformer', choices=['transformer', 'lstm', 'gru'], help='model name')
     parser.add_argument('--notes', type=str, default='-', help='as training notes or specifical args')
     parser.add_argument('--app', type=str, default='', help='other input args')
+
     
     args = parser.parse_args()
 
@@ -71,7 +73,9 @@ if __name__ == '__main__':
                   f"--seq_len {args.seq_len} --hidden_t_dim {args.hidden_t_dim} --seed {args.seed} " \
                   f"--hidden_dim {args.hidden_dim} " \
                   f"--learning_steps {args.learning_steps} --save_interval {args.save_interval} " \
-                  f"--config_name {args.config_name} --notes {args.notes}"
+                  f"--config_name {args.config_name} --notes {args.notes} " \
+                  f"--model_name {args.model_name} "
+
 
     COMMANDLINE += " " + args.app
 
